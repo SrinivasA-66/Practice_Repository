@@ -1,0 +1,163 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1>Welcome back, {{ userName || 'Developer' }}</h1>
+          <p class="page-subtitle">Here's an overview of your apps and API usage</p>
+        </div>
+        <a routerLink="/developer/apps/new" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Register New App
+        </a>
+      </div>
+
+      
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Loading dashboard...</span>
+      </div>
+
+      
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+  
+      <div class="grid-4 mb-20" *ngIf="!isLoading">
+        <div *ngFor="let stat of stats" class="stat-card">
+          <div class="stat-icon" [ngStyle]="{ 'background': stat.gradient }">
+            <i [class]="stat.icon"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+
+  
+      <div class="glass-card" *ngIf="!isLoading">
+        <div class="flex items-center justify-between mb-16">
+          <h3>My Applications</h3>
+          <span class="badge badge-info">{{ apps.length }} apps</span>
+        </div>
+
+       
+        <div class="empty-state" *ngIf="apps.length === 0">
+          <i class="fas fa-cube"></i>
+          <p>No applications registered yet.</p>
+          <a routerLink="/developer/apps/new" class="btn btn-primary btn-sm mt-12">Register Your First App</a>
+        </div>
+
+       
+        <table class="data-table" *ngIf="apps.length > 0">
+          <thead>
+            <tr>
+              <th>App Name</th>
+              <th>TPP</th>
+              <th>Scopes</th>
+              <th>Status</th>
+              <th>Subscriptions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of apps">
+              <td>
+                <div class="flex items-center gap-8">
+                  <div class="app-icon-sm">
+                    <i class="fas fa-cube"></i>
+                  </div>
+                  <strong>{{ app.appName }}</strong>
+                </div>
+              </td>
+              <td class="text-muted">{{ app.tpp.legalName || 'N/A' }}</td>
+              <td>
+                <span *ngFor="let scope of parseScopes(app.scopesRequested)" class="scope-pill">
+                  {{ scope }}
+                </span>
+              </td>
+              <td>
+                <span class="badge"
+                      [ngClass]="{
+                        'badge-approved': app.status === 'APPROVED',
+                        'badge-pending': app.status === 'PENDING',
+                        'badge-revoked': app.status === 'REJECTED'
+                      }">
+                  {{ app.status }}
+                </span>
+              </td>
+              <td>
+                <div *ngIf="getSubscriptionsFor(app.tppAppId).length === 0" class="text-sm text-muted">—</div>
+                <div *ngFor="let sub of getSubscriptionsFor(app.tppAppId)"
+                     style="display:flex; gap:6px; align-items:center; padding:2px 0; font-size:0.8rem;">
+                  <span class="badge"
+                        [ngClass]="sub.apiPlan?.environment === 'SANDBOX' ? 'badge-sandbox' : 'badge-info'"
+                        style="font-size:0.65rem">
+                    {{ sub.apiPlan?.environment }}
+                  </span>
+                  <span>{{ sub.apiPlan?.apiProduct?.name || 'Plan' }}</span>
+                  <span class="badge"
+                        [ngClass]="{
+                          'badge-active': sub.status === 'ACTIVE',
+                          'badge-revoked': sub.status === 'SUSPENDED',
+                          'badge-expired': sub.status === 'CANCELLED'
+                        }"
+                        style="font-size:0.65rem">{{ sub.status }}</span>
+                </div>
+              </td>
+              <td>
+                <a [routerLink]="['/developer/apps', app.tppAppId, 'keys']" class="btn btn-secondary btn-sm">
+                  <i class="fas fa-key"></i> Keys
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="glass-card mt-20" *ngIf="!isLoading">
+        <div class="flex items-center justify-between mb-16">
+          <h3>TPP Companies</h3>
+          <span class="badge badge-info">{{ tpps.length }} companies</span>
+        </div>
+
+   
+        <div class="empty-state" *ngIf="tpps.length === 0">
+          <i class="fas fa-building"></i>
+          <p>No TPP companies registered yet.</p>
+          <a routerLink="/developer/tpp/register" class="btn btn-primary btn-sm mt-12">Register TPP Company</a>
+        </div>
+
+        <table class="data-table" *ngIf="tpps.length > 0">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Registration</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tpp of tpps">
+              <td>
+                <div class="flex items-center gap-8">
+                  <div class="app-icon-sm">
+                    <i class="fas fa-building"></i>
+                  </div>
+                  <strong>{{ tpp.legalName }}</strong>
+                </div>
+              </td>
+              <td>{{ tpp.registrationNumber }}</td>
+              <td>
+                <span class="badge"
+                      [ngClass]="{
+                        'badge-sandbox': tpp.status === 'SANDBOX',
+                        'badge-production': tpp.status === 'PRODUCTION',
+                        'badge-suspended': tpp.status === 'SUSPENDED'
+                      }">
+                  {{ tpp.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  

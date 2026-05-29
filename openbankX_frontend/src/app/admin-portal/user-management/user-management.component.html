@@ -1,0 +1,169 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-users"></i> User Management</h1>
+          <p class="page-subtitle">Manage users, roles and account status</p>
+        </div>
+        <button class="btn btn-primary" (click)="openCreate()" *ngIf="!showForm">
+          <i class="fas fa-plus"></i> Add User
+        </button>
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+      <div class="glass-card mb-20" *ngIf="showForm" style="max-width:480px">
+        <h3 class="mb-16">
+          {{ editMode ? 'Edit User' : 'Create User' }}
+        </h3>
+
+        <form #userForm="ngForm" (ngSubmit)="save()" novalidate>
+
+          <div class="form-group">
+            <label>Name <span class="required-asterisk">*</span></label>
+            <input class="form-control"
+                   name="name"
+                   [(ngModel)]="form.name"
+                   #nameRef="ngModel"
+                   required
+                   minlength="2"
+                   maxlength="100"
+                   pattern="^[A-Za-z][A-Za-z\s\.\-']*$">
+            <small class="field-error" *ngIf="nameRef.invalid && (nameRef.touched || userForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="nameRef.errors?.['required']">Name is required.</span>
+              <span *ngIf="nameRef.errors?.['minlength']">Name must be at least 2 characters.</span>
+              <span *ngIf="nameRef.errors?.['pattern']">Name can only contain letters, spaces, periods, hyphens and apostrophes.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Email <span class="required-asterisk">*</span></label>
+            <input class="form-control"
+                   name="email"
+                   type="email"
+                   [(ngModel)]="form.email"
+                   #emailRef="ngModel"
+                   required
+                   email>
+            <small class="field-error" *ngIf="emailRef.invalid && (emailRef.touched || userForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="emailRef.errors?.['required']">Email is required.</span>
+              <span *ngIf="emailRef.errors?.['email']">Please enter a valid email address.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Phone <span class="required-asterisk">*</span></label>
+            <input class="form-control"
+                   name="phone"
+                   placeholder="9876543210"
+                   maxlength="10"
+                   inputmode="numeric"
+                   [(ngModel)]="form.phone"
+                   #phoneRef="ngModel"
+                   required
+                   pattern="^[6-9][0-9]{9}$">
+            <small class="field-error" *ngIf="phoneRef.invalid && (phoneRef.touched || userForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="phoneRef.errors?.['required']">Phone is required.</span>
+              <span *ngIf="phoneRef.errors?.['pattern']">Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.</span>
+            </small>
+          </div>
+
+          <div class="form-group" *ngIf="!editMode">
+            <label>Password <span class="required-asterisk">*</span></label>
+            <input type="password" class="form-control"
+                   name="password"
+                   [(ngModel)]="form.password"
+                   #pwdRef="ngModel"
+                   required
+                   minlength="8"
+                   pattern="^(?=.*[A-Za-z])(?=.*\d).+$">
+            <small class="field-error" *ngIf="pwdRef.invalid && (pwdRef.touched || userForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="pwdRef.errors?.['required']">Password is required.</span>
+              <span *ngIf="pwdRef.errors?.['minlength']">Password must be at least 8 characters.</span>
+              <span *ngIf="pwdRef.errors?.['pattern'] && !pwdRef.errors?.['minlength']">Password must include letters and numbers.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Role <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="role"
+                    [(ngModel)]="form.role"
+                    #roleRef="ngModel"
+                    required>
+              <option [ngValue]="''" disabled>Select a role…</option>
+              <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+            </select>
+            <small class="field-error" *ngIf="roleRef.invalid && (roleRef.touched || userForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Role is required.
+            </small>
+          </div>
+
+          <div class="flex gap-8">
+            <button type="submit" class="btn btn-success" [disabled]="isSaving">
+              <span *ngIf="!isSaving"><i class="fas fa-check"></i> {{ editMode ? 'Update' : 'Create' }}</span>
+              <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+            </button>
+            <button type="button" class="btn btn-light" (click)="cancel()" [disabled]="isSaving">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+    
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="glass-card" *ngIf="!isLoading">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users">
+              <td>#{{ u.userId }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              <td><span class="badge badge-info">{{ u.role }}</span></td>
+              <td>
+                <span class="badge"
+                  [ngClass]="u.status === 'ACTIVE' ? 'badge-active' : 'badge-locked'">
+                  {{ u.status }}
+                </span>
+              </td>
+              <td>
+                <div class="flex gap-8">
+                  <button class="btn btn-sm btn-secondary" (click)="edit(u)">Edit</button>
+                  <button class="btn btn-sm"
+                    [ngClass]="u.status==='ACTIVE' ? 'btn-danger' : 'btn-success'"
+                    (click)="toggleStatus(u)">
+                    {{ u.status === 'ACTIVE' ? 'Lock' : 'Unlock' }}
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="delete(u.userId)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="users.length === 0">
+          <i class="fas fa-users"></i>
+          <p>No users yet</p>
+        </div>
+      </div>
+    </div>
+  

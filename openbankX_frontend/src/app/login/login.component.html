@@ -1,0 +1,88 @@
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-card">
+
+      <div class="login-header">
+        <div class="login-logo">
+          <i class="fas fa-university"></i>
+        </div>
+        <h1>OpenBank<span class="accent">X</span></h1>
+        <p class="login-subtitle">Secure Online Banking Platform</p>
+      </div>
+
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i>
+        {{ successMessage }}
+      </div>
+
+      <form #loginForm="ngForm" (ngSubmit)="login()" novalidate>
+
+        <div class="form-group">
+          <label>Email Address <span class="required-asterisk">*</span></label>
+          <div class="input-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email"
+                   name="email"
+                   class="form-control with-icon"
+                   placeholder="Enter your email"
+                   [(ngModel)]="email"
+                   #emailRef="ngModel"
+                   required
+                   email>
+          </div>
+          <small class="field-error" *ngIf="emailRef.invalid && (emailRef.touched || loginForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="emailRef.errors?.['required']">Email is required.</span>
+            <span *ngIf="emailRef.errors?.['email']">Please enter a valid email address.</span>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Password <span class="required-asterisk">*</span></label>
+          <div class="input-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password"
+                   name="password"
+                   class="form-control with-icon"
+                   placeholder="Enter your password"
+                   [(ngModel)]="password"
+                   #passwordRef="ngModel"
+                   required
+                   minlength="8">
+          </div>
+          <small class="field-error" *ngIf="passwordRef.invalid && (passwordRef.touched || loginForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="passwordRef.errors?.['required']">Password is required.</span>
+            <span *ngIf="passwordRef.errors?.['minlength']">Password must be at least 8 characters.</span>
+          </small>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary btn-full"
+                [disabled]="isLoading">
+          <span *ngIf="!isLoading">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </span>
+          <span *ngIf="isLoading">
+            <i class="fas fa-spinner fa-spin"></i> Signing in...
+          </span>
+        </button>
+      </form>
+
+      <div class="register-link">
+        New to OpenBankX? <a routerLink="/register">Open an account</a>
+      </div>
+
+      <div class="trust-strip">
+        <span><i class="fas fa-shield-alt"></i> PSD2 Compliant</span>
+        <span class="dot"></span>
+        <span><i class="fas fa-lock"></i> 256-bit Encrypted</span>
+      </div>
+    </div>
+  </div>
+</div>

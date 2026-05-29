@@ -1,0 +1,17 @@
+.portal-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.portal-main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: margin-left 0.2s ease;
+}
+.portal-content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+}

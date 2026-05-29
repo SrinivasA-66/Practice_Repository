@@ -1,0 +1,66 @@
+<div class="page-content">
+  <div class="page-header">
+    <div>
+      <h1><i class="fas fa-bell"></i> Notifications</h1>
+      <p class="page-subtitle">Alerts, consent updates & security events</p>
+    </div>
+    <div class="header-actions" *ngIf="unreadCount > 0">
+      <span class="unread-badge">{{ unreadCount }} unread</span>
+      <button class="btn btn-secondary btn-sm" (click)="markAllRead()"><i class="fas fa-check-double"></i> Mark all read</button>
+    </div>
+  </div>
+
+  <div class="loading-container" *ngIf="isLoading"><div class="spinner"></div><span>Loading notifications...</span></div>
+
+  <div class="empty-state" *ngIf="!isLoading && notifications.length === 0">
+    <i class="fas fa-bell-slash"></i><p>No notifications yet</p>
+  </div>
+
+  <div class="notification-list" *ngIf="!isLoading && notifications.length > 0">
+    <div *ngFor="let n of notifications" class="notification-item" [ngClass]="{ 'unread': n.status === 'UNREAD' }" (click)="openDetail(n)">
+      <div class="notif-icon" [ngStyle]="{ 'background': getCategoryColor(n.category) }">
+        <i [class]="getCategoryIcon(n.category)"></i>
+      </div>
+      <div class="notif-body">
+        <p class="notif-message">{{ n.message }}</p>
+        <div class="notif-meta">
+          <span class="badge" [ngClass]="'badge-' + n.category.toLowerCase()">{{ n.category }}</span>
+          <span class="text-sm text-muted">{{ n.createdDate | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="notif-actions">
+        <button class="btn-icon" (click)="toggleRead(n, $event)" [title]="n.status === 'READ' ? 'Mark unread' : 'Mark read'">
+          <i [ngClass]="n.status === 'READ' ? 'fas fa-envelope-open' : 'fas fa-envelope'"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="selectedNotification" (click)="closeDetail()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon" [ngStyle]="{ 'background': getCategoryColor(selectedNotification.category) }">
+          <i [class]="getCategoryIcon(selectedNotification.category)"></i>
+        </div>
+        <h3>Notification Detail</h3>
+        <button class="btn-icon close-btn" (click)="closeDetail()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="detail-message">{{ selectedNotification.message }}</p>
+        <div class="detail-grid">
+          <div><span class="text-sm text-muted">Category</span><br><span class="badge" [ngClass]="'badge-' + selectedNotification.category.toLowerCase()">{{ selectedNotification.category }}</span></div>
+          <div><span class="text-sm text-muted">Status</span><br><strong>{{ selectedNotification.status }}</strong></div>
+          <div><span class="text-sm text-muted">Timestamp</span><br><span>{{ selectedNotification.createdDate | date:'full' }}</span></div>
+          <div><span class="text-sm text-muted">Notification ID</span><br><span>#{{ selectedNotification.notificationId }}</span></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" (click)="toggleRead(selectedNotification, $event); closeDetail()">
+          <i [ngClass]="selectedNotification.status === 'READ' ? 'fas fa-envelope' : 'fas fa-envelope-open'"></i>
+          {{ selectedNotification.status === 'READ' ? 'Mark Unread' : 'Mark Read' }}
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="closeDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

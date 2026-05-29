@@ -1,0 +1,8 @@
+.scope-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; }
+.scope-check-item {
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+}
+.scope-check-item input[type="checkbox"] {
+  accent-color: #667eea;
+}
+.invalid { border-color: var(--status-revoked) !important; }

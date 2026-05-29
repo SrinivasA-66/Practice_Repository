@@ -1,0 +1,45 @@
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs / editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/*
+.vscode/
+.claude/
+
+# Angular CLI
+.angular/cache
+.angular/
+
+# Tests
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Env files (do not commit secrets)
+*.env
+*.env.*
+!*.env.example
+
+# Misc
+*.tgz
+*.swp

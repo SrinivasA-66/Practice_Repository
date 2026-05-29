@@ -1,0 +1,46 @@
+.notification-list { display: flex; flex-direction: column; gap: 8px; }
+.notification-item {
+  display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+  border-radius: 12px; background: rgba(255,255,255,0.7); cursor: pointer;
+  transition: all 0.2s; border-left: 3px solid transparent;
+}
+.notification-item:hover { transform: translateX(4px); background: rgba(255,255,255,0.9); }
+.notification-item.unread { border-left-color: var(--primary); background: rgba(102,126,234,0.06); font-weight: 500; }
+.notif-icon {
+  width: 42px; height: 42px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; color: #fff; font-size: 1rem; flex-shrink: 0;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-message { margin: 0 0 6px; line-height: 1.4; }
+.notif-meta { display: flex; align-items: center; gap: 10px; }
+.notif-actions { flex-shrink: 0; }
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted); padding: 6px; border-radius: 8px; }
+.btn-icon:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
+.unread-badge { background: var(--primary); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4); display: flex; align-items: center;
+  justify-content: center; z-index: 1000; backdrop-filter: blur(4px);
+}
+.modal-card {
+  background: #fff; border-radius: 16px; max-width: 520px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+}
+.modal-header {
+  display: flex; align-items: center; gap: 12px; padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+.modal-header h3 { flex: 1; margin: 0; }
+.modal-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; }
+.close-btn { font-size: 1.2rem; }
+.modal-body { padding: 24px; }
+.detail-message { font-size: 1.05rem; line-height: 1.6; margin: 0 0 20px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.modal-footer { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #eee; justify-content: flex-end; }
+
+.badge-consent { background: rgba(102,126,234,0.15); color: #667eea; }
+.badge-security { background: rgba(239,68,68,0.15); color: #ef4444; }
+.badge-usage { background: rgba(16,185,129,0.15); color: #10b981; }
+.badge-incident { background: rgba(245,158,11,0.15); color: #f59e0b; }

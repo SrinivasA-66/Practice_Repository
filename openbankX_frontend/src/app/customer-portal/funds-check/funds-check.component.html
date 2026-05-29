@@ -1,0 +1,184 @@
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1><i class="fas fa-search-dollar"></i> Funds Confirmation</h1>
+      <p class="page-subtitle" *ngIf="appName">
+        Accessed via <strong>{{ appName }}</strong>
+      </p>
+      <p class="page-subtitle" *ngIf="!appName">
+        Open this page through an app that has the <em>Confirm funds</em> permission
+      </p>
+    </div>
+  </div>
+
+
+  <div class="loading-container" *ngIf="isCheckingPermission">
+    <div class="spinner"></div>
+    Checking consent...
+  </div>
+
+  
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length > 0"
+       class="glass-card">
+    <h3 class="mb-12"><i class="fas fa-hand-pointer"></i> Open through an app</h3>
+    <p class="text-muted mb-16">
+      You've granted funds-check access to {{ eligibleApps.length }} app{{ eligibleApps.length === 1 ? '' : 's' }}.
+      Pick which one you'd like to use.
+    </p>
+    <div class="app-picker">
+      <button *ngFor="let c of eligibleApps"
+              class="app-picker-item"
+              (click)="openThroughApp(c)">
+        <div class="app-picker-icon"><i class="fas fa-cube"></i></div>
+        <div class="app-picker-meta">
+          <strong>{{ c.tppApp?.appName }}</strong>
+          <span class="text-sm text-muted">{{ c.tppApp?.tpp?.legalName || '' }}</span>
+        </div>
+        <i class="fas fa-chevron-right text-muted"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length === 0 && noConsentsAtAll"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>No active consents yet</h3>
+    <p class="text-muted">
+      You haven't granted any app access yet. Go to <strong>My Apps</strong> to get started.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open My Apps
+    </button>
+  </div>
+
+
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length === 0 && !noConsentsAtAll"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>No app has funds-check access yet</h3>
+    <p class="text-muted">
+      None of your active consents include the <em>Confirm funds</em> permission.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open My Apps
+    </button>
+  </div>
+
+
+  <div *ngIf="!isCheckingPermission && tppAppId && !hasFundsAccess"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>This app doesn't have funds-check access</h3>
+    <p class="text-muted">
+      Your consent for <strong>{{ appName || 'this app' }}</strong> doesn't include the
+      <em>Confirm funds</em> permission.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open another app
+    </button>
+  </div>
+
+ 
+  <div class="glass-card max-w-600"
+       *ngIf="!isCheckingPermission && tppAppId && hasFundsAccess">
+
+    <div class="empty-state" *ngIf="accounts.length === 0">
+      <i class="fas fa-piggy-bank"></i>
+      <p>You have no bank accounts on file to run a funds check against.</p>
+    </div>
+
+    <ng-container *ngIf="accounts.length > 0">
+
+      <form #fundsForm="ngForm" (ngSubmit)="checkFunds()" novalidate>
+
+        <div class="form-group">
+          <label>Choose an account <span class="required-asterisk">*</span></label>
+          <select class="form-control"
+                  name="selectedAccount"
+                  [(ngModel)]="selectedAccount"
+                  (ngModelChange)="onAccountChange()"
+                  #accountRef="ngModel"
+                  required>
+            <option [ngValue]="null" disabled>Select one of your accounts…</option>
+            <option *ngFor="let acc of accounts" [ngValue]="acc">
+              {{ acc.accountNumberMasked }} · {{ acc.type }} · {{ acc.currency }}
+            </option>
+          </select>
+          <small class="field-error" *ngIf="accountRef.invalid && (accountRef.touched || fundsForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i> Please select an account.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Amount to check <span class="required-asterisk">*</span></label>
+          <div class="amount-input-wrap">
+            <span class="amount-currency" *ngIf="selectedAccount">{{ selectedAccount.currency }}</span>
+            <input type="number"
+                   name="amount"
+                   class="form-control"
+                   placeholder="0.00"
+                   min="0.01"
+                   max="100000000"
+                   step="0.01"
+                   [(ngModel)]="amount"
+                   (ngModelChange)="result = null"
+                   #amountRef="ngModel"
+                   required>
+          </div>
+          <small class="field-error" *ngIf="amountRef.invalid && (amountRef.touched || fundsForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="amountRef.errors?.['required']">Amount is required.</span>
+            <span *ngIf="amountRef.errors?.['min']">Amount must be greater than 0.</span>
+            <span *ngIf="amountRef.errors?.['max']">Amount is too large.</span>
+          </small>
+        </div>
+
+        <div class="alert alert-error" *ngIf="errorMessage">
+          <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary btn-full"
+                [disabled]="isChecking">
+          <span *ngIf="!isChecking"><i class="fas fa-search"></i> Check funds availability</span>
+          <span *ngIf="isChecking"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+        </button>
+      </form>
+
+     
+      <div *ngIf="result" class="funds-result mt-20"
+           [class.success]="result.sufficient"
+           [class.error]="!result.sufficient">
+
+        <h3 *ngIf="result.sufficient" class="text-success">
+          <i class="fas fa-check-circle"></i> Sufficient funds available
+        </h3>
+        <h3 *ngIf="!result.sufficient" class="text-error">
+          <i class="fas fa-times-circle"></i> Insufficient funds
+        </h3>
+
+        <div class="result-row">
+          <span class="text-muted">Account</span>
+          <strong>{{ selectedAccount?.accountNumberMasked }} ({{ selectedAccount?.type }})</strong>
+        </div>
+        <div class="result-row">
+          <span class="text-muted">Amount requested</span>
+          <strong>{{ selectedAccount?.currency }} {{ amount | number:'1.2-2' }}</strong>
+        </div>
+        <div class="result-row">
+          <span class="text-muted">Current balance</span>
+          <strong>{{ selectedAccount?.currency }} {{ result.balance | number:'1.2-2' }}</strong>
+        </div>
+        <div class="result-row" *ngIf="!result.sufficient">
+          <span class="text-muted">Additional amount needed</span>
+          <strong class="text-error">
+            {{ selectedAccount?.currency }} {{ result.shortage | number:'1.2-2' }}
+          </strong>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+</div>

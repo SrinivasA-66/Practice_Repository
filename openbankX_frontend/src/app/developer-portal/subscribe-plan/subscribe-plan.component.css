@@ -1,0 +1,111 @@
+.max-w-500 { max-width: 500px; margin: 0 auto; }
+.mb-20 { margin-bottom: 20px; }
+.plan-card {
+	cursor: pointer !important;
+	transition: all 0.2s ease;
+	border: 2px solid transparent;
+	padding: 24px;
+	min-height: 240px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+.plan-card * {
+	cursor: pointer !important;
+}
+.plan-card:hover {
+	transform: translateY(-3px);
+	border-color: rgba(99,102,241,0.25);
+}
+.selected-plan {
+	border-color: var(--primary);
+	box-shadow: 0 16px 35px rgba(102,126,234,0.15);
+	background: rgba(102,126,234,0.08);
+}
+.plan-card:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(102,126,234,0.3);
+}
+.plan-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; }
+
+.form-row {
+	display: grid;
+	grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+	gap: 24px;
+	align-items: stretch;
+}
+
+.form-column {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.selected-plan-summary {
+	border: 1px solid rgba(0,0,0,0.08);
+	border-radius: 16px;
+	padding: 22px;
+	min-height: 190px;
+	background: var(--surface);
+	box-shadow: var(--shadow-sm);
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	gap: 16px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.plan-summary-box {
+	border: 1px solid rgba(99,102,241,0.15);
+	border-radius: 16px;
+	background: rgba(247,250,255,0.95);
+	padding: 18px;
+	display: grid;
+	gap: 16px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.plan-summary-box .plan-summary-title {
+	font-size: 0.95rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: var(--text-primary);
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+}
+
+.plan-summary-box .plan-summary-field {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: white;
+	border: 1px solid rgba(226,232,240,0.8);
+}
+
+.plan-summary-box .plan-summary-field strong {
+	color: var(--text-primary);
+}
+
+.plan-summary-box .plan-summary-field span {
+	color: var(--text-muted);
+	font-size: 0.93rem;
+}
+
+.selected-plan-summary label {
+	font-size: 0.95rem;
+	font-weight: 700;
+	margin-bottom: 14px;
+	display: block;
+	color: var(--text-primary);
+}
+
+@media (max-width: 900px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

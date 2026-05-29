@@ -1,0 +1,62 @@
+.consent-dates { display: flex; flex-direction: column; gap: 4px; }
+.consent-card { animation: fadeInUp 0.4s ease both; }
+
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: var(--accent-navy);
+  margin-bottom: 14px;
+}
+.section-title i { color: var(--accent-blue); }
+.section-title .badge { margin-left: auto; }
+
+.mb-24 { margin-bottom: 24px; }
+
+
+.review-card {
+  border-left: 4px solid var(--accent-gold);
+  animation: fadeInUp 0.3s ease both;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-app-icon {
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  color: var(--accent-blue);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scope-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.scope-item i { color: var(--status-active); }
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.85rem;
+}

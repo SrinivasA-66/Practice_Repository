@@ -1,0 +1,60 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div><h1><i class="fas fa-exclamation-triangle"></i> Incident Management</h1></div>
+        <button class="btn btn-primary" (click)="showForm = !showForm"><i class="fas fa-plus"></i> New Incident</button>
+      </div>
+      <div class="glass-card mb-20" *ngIf="showForm" style="max-width:560px">
+        <h3 class="mb-16">Report New Incident</h3>
+        <form #incForm="ngForm" (ngSubmit)="createIncident()" novalidate>
+          <div class="form-group">
+            <label>Category <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="category"
+                    [(ngModel)]="newIncident.category"
+                    #catRef="ngModel"
+                    required>
+              <option [ngValue]="''" disabled>Choose a category…</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+            <small class="field-error" *ngIf="catRef.invalid && (catRef.touched || incForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Category is required.
+            </small>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="required-asterisk">*</span></label>
+            <textarea class="form-control"
+                      name="description"
+                      [(ngModel)]="newIncident.description"
+                      rows="3"
+                      #descRef="ngModel"
+                      required
+                      minlength="10"
+                      maxlength="500"></textarea>
+            <small class="field-error" *ngIf="descRef.invalid && (descRef.touched || incForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="descRef.errors?.['required']">Description is required.</span>
+              <span *ngIf="descRef.errors?.['minlength']">Description must be at least 10 characters.</span>
+            </small>
+          </div>
+          <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
+        </form>
+      </div>
+      <div class="loading-container" *ngIf="isLoading"><div class="spinner"></div></div>
+      <div class="alert alert-error" *ngIf="errorMessage"><i class="fas fa-exclamation-circle"></i> {{ errorMessage }}</div>
+      <div *ngIf="!isLoading">
+        <div *ngFor="let inc of incidents" class="glass-card mb-12">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-12">
+              <div class="inc-icon" [ngStyle]="{ 'background': getCatColor(inc.category) }"><i [class]="getCatIcon(inc.category)"></i></div>
+              <div><h4>{{ inc.description }}</h4><span class="text-sm text-muted">{{ inc.detectedDate | date:'medium' }}</span></div>
+            </div>
+            <div class="flex items-center gap-8">
+              <span class="badge" [ngClass]="{'badge-open': inc.status === 'OPEN','badge-mitigated': inc.status === 'MITIGATED','badge-closed': inc.status === 'CLOSED'}">{{ inc.status }}</span>
+              <span class="badge" [ngClass]="'badge-' + inc.category.toLowerCase()">{{ inc.category }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="incidents.length === 0 && !errorMessage"><i class="fas fa-check-circle"></i><p>No incidents</p></div>
+      </div>
+    </div>
+  

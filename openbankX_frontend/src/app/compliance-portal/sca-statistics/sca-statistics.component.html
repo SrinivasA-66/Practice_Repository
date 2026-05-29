@@ -1,0 +1,30 @@
+    <div class="page-content">
+      <div class="page-header"><div><h1><i class="fas fa-chart-pie"></i> SCA Statistics</h1>
+        <p class="page-subtitle">Strong Customer Authentication success/failure rates</p></div>
+      </div>
+      <div class="grid-3 mb-20">
+        <div *ngFor="let stat of stats" class="stat-card">
+          <div class="stat-icon" [ngStyle]="{ 'background': stat.gradient }"><i [class]="stat.icon"></i></div>
+          <div class="stat-content"><div class="stat-value">{{ stat.value }}</div><div class="stat-label">{{ stat.label }}</div></div>
+        </div>
+      </div>
+      <div class="glass-card">
+        <h3 class="mb-16">Recent SCA Events</h3>
+        <div class="loading-container" *ngIf="isLoading"><div class="spinner"></div></div>
+        <div class="alert alert-error" *ngIf="errorMessage"><i class="fas fa-exclamation-circle"></i> {{ errorMessage }}</div>
+        <table class="data-table" *ngIf="!isLoading && events.length > 0">
+          <thead><tr><th>Time</th><th>User</th><th>Method</th><th>Result</th><th>Reference</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let ev of events">
+              <td class="text-sm">{{ ev.eventTime | date:'medium' }}</td>
+              <td>{{ ev.user?.name || 'N/A' }}</td>
+              <td><span class="badge badge-info">{{ ev.method }}</span></td>
+              <td><span class="badge" [ngClass]="ev.result === 'PASS' ? 'badge-pass' : 'badge-fail'">{{ ev.result }}</span></td>
+              <td class="font-mono text-sm">{{ ev.referenceId }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="!isLoading && events.length === 0 && !errorMessage"><p>No SCA events recorded</p></div>
+      </div>
+    </div>
+  

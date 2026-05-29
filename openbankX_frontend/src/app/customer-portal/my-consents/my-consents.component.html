@@ -1,0 +1,173 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-handshake"></i> My Consents</h1>
+          <p class="page-subtitle">Review pending requests and manage your data-sharing permissions</p>
+        </div>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div><span>Loading consents...</span>
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && consents.length === 0 && !errorMessage">
+        <i class="fas fa-handshake"></i>
+        <p>No consents found. Browse apps to grant access.</p>
+        <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+          <i class="fas fa-store"></i> Go to My Apps
+        </button>
+      </div>
+
+     
+      <section *ngIf="!isLoading && pendingConsents.length > 0" class="mb-24">
+        <h3 class="section-title">
+          <i class="fas fa-clipboard-check"></i> Awaiting your review
+          <span class="badge badge-pending">{{ pendingConsents.length }}</span>
+        </h3>
+
+        <div class="grid-2">
+          <div *ngFor="let consent of pendingConsents" class="glass-card review-card">
+
+            <div class="review-header">
+              <div class="review-app-icon"><i class="fas fa-cube"></i></div>
+              <div>
+                <h4>{{ consent.tppApp?.appName || 'App' }}</h4>
+                <p class="text-sm text-muted">{{ consent.tppApp?.tpp?.legalName || '' }}</p>
+              </div>
+              <span class="badge badge-pending" style="margin-left:auto">AWAITING SCA</span>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <h5 class="mb-8">Requested permissions</h5>
+            <div class="scope-list">
+              <div *ngFor="let scope of parseJson(consent.scopeJSON)" class="scope-item">
+                <i class="fas fa-check-circle text-success"></i>
+                <span>{{ getScopeLabel(scope) }}</span>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="detail-row">
+              <span class="text-muted">Consent ID</span>
+              <span>#{{ consent.consentId }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="text-muted">Expires</span>
+              <span>{{ consent.expiryDate | date:'mediumDate' }}</span>
+            </div>
+
+            <div class="flex gap-8 mt-16">
+              <button class="btn btn-success btn-sm" (click)="goToSca(consent)">
+                <i class="fas fa-shield-alt"></i> Approve &amp; verify (SCA)
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="deny(consent)">
+                <i class="fas fa-times"></i> Deny
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+      <section *ngIf="!isLoading && otherConsents.length > 0">
+        <h3 class="section-title">
+          <i class="fas fa-list"></i> My consents
+          <span class="badge badge-info">{{ otherConsents.length }}</span>
+        </h3>
+
+        <div class="grid-3">
+          <div *ngFor="let consent of otherConsents" class="glass-card consent-card">
+            <div class="flex items-center justify-between mb-12">
+              <span class="badge"
+                    [ngClass]="{
+                      'badge-active':  consent.status === 'ACTIVE',
+                      'badge-revoked': consent.status === 'REVOKED',
+                      'badge-expired': consent.status === 'EXPIRED'
+                    }">{{ consent.status }}</span>
+              <span class="text-sm text-muted">#{{ consent.consentId }}</span>
+            </div>
+
+            <h4>{{ consent.tppApp?.appName || 'TPP App' }}</h4>
+            <p class="text-sm text-muted mt-4">{{ consent.tppApp?.tpp?.legalName || '' }}</p>
+
+          
+            <ng-container *ngIf="editingId !== consent.consentId">
+              <div class="mt-12">
+                <label class="text-sm text-muted">Permissions granted</label>
+                <div class="mt-4">
+                  <span *ngFor="let scope of parseJson(consent.scopeJSON)" class="scope-pill">
+                    {{ getScopeLabel(scope) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="consent-dates mt-12">
+                <div>
+                  <span class="text-sm text-muted">Created:</span>
+                  <span class="text-sm">{{ consent.createdDate | date:'mediumDate' }}</span>
+                </div>
+                <div>
+                  <span class="text-sm text-muted">Expires:</span>
+                  <span class="text-sm">{{ consent.expiryDate | date:'mediumDate' }}</span>
+                </div>
+              </div>
+
+              <div class="flex gap-8 mt-16">
+                <a [routerLink]="['/customer/consents', consent.consentId]"
+                   class="btn btn-secondary btn-sm">
+                  <i class="fas fa-eye"></i> Details
+                </a>
+                <button *ngIf="consent.status === 'ACTIVE'"
+                        class="btn btn-light btn-sm"
+                        (click)="startEdit(consent)">
+                  <i class="fas fa-pen"></i> Edit permissions
+                </button>
+                <button *ngIf="consent.status === 'ACTIVE'"
+                        class="btn btn-danger btn-sm"
+                        (click)="revoke(consent)">
+                  <i class="fas fa-times"></i> Revoke
+                </button>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="editingId === consent.consentId">
+              <div class="mt-12">
+                <label class="text-sm text-muted">
+                  Toggle the permissions you want to keep.
+                  Unchecking all is the same as revoking the consent.
+                </label>
+
+                <div class="scope-checkboxes mt-8">
+                  <label *ngFor="let scope of editableScopes(consent)" class="scope-check-item">
+                    <input type="checkbox"
+                           [checked]="editingSelected.includes(scope)"
+                           (change)="toggleEditScope(scope)">
+                    <span class="scope-pill">{{ getScopeLabel(scope) }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex gap-8 mt-16">
+                <button class="btn btn-success btn-sm" (click)="saveEdit(consent)" [disabled]="isSavingEdit">
+                  <span *ngIf="!isSavingEdit"><i class="fas fa-check"></i> Save changes</span>
+                  <span *ngIf="isSavingEdit"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+                </button>
+                <button class="btn btn-light btn-sm" (click)="cancelEdit()" [disabled]="isSavingEdit">
+                  Cancel
+                </button>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </section>
+    </div>
+  
