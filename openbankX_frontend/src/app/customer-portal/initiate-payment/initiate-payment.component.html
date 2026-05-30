@@ -1,0 +1,290 @@
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1><i class="fas fa-paper-plane"></i> Initiate Payment</h1>
+      <p class="page-subtitle" *ngIf="appName">
+        Accessed via <strong>{{ appName }}</strong>
+      </p>
+      <p class="page-subtitle" *ngIf="!appName">
+        Open this page through an app that has the <em>Initiate payments</em> permission
+      </p>
+    </div>
+  </div>
+
+ 
+  <div class="loading-container" *ngIf="isCheckingPermission">
+    <div class="spinner"></div>
+    Checking consent...
+  </div>
+
+  
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length > 0"
+       class="glass-card">
+    <h3 class="mb-12"><i class="fas fa-hand-pointer"></i> Open through an app</h3>
+    <p class="text-muted mb-16">
+      You've granted payment access to {{ eligibleApps.length }} app{{ eligibleApps.length === 1 ? '' : 's' }}.
+      Pick which one you'd like to use.
+    </p>
+    <div class="app-picker">
+      <button *ngFor="let c of eligibleApps"
+              class="app-picker-item"
+              (click)="openThroughApp(c)">
+        <div class="app-picker-icon"><i class="fas fa-cube"></i></div>
+        <div class="app-picker-meta">
+          <strong>{{ c.tppApp?.appName }}</strong>
+          <span class="text-sm text-muted">{{ c.tppApp?.tpp?.legalName || '' }}</span>
+        </div>
+        <i class="fas fa-chevron-right text-muted"></i>
+      </button>
+    </div>
+  </div>
+
+ 
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length === 0 && noConsentsAtAll"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>No active consents yet</h3>
+    <p class="text-muted">
+      You haven't granted any app access yet. Go to <strong>My Apps</strong> to get started.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open My Apps
+    </button>
+  </div>
+
+ 
+  <div *ngIf="!isCheckingPermission && !tppAppId && eligibleApps.length === 0 && !noConsentsAtAll"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>No app has payment access yet</h3>
+    <p class="text-muted">
+      None of your active consents include the <em>Initiate payments</em> permission.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open My Apps
+    </button>
+  </div>
+
+  
+  <div *ngIf="!isCheckingPermission && tppAppId && !hasPaymentAccess"
+       class="glass-card no-consent-card">
+    <i class="fas fa-lock no-consent-icon"></i>
+    <h3>This app doesn't have payment access</h3>
+    <p class="text-muted">
+      Your consent for <strong>{{ appName || 'this app' }}</strong> doesn't include the
+      <em>Initiate payments</em> permission.
+    </p>
+    <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+      <i class="fas fa-store"></i> Open another app
+    </button>
+  </div>
+
+
+  <div class="glass-card max-w-600"
+       *ngIf="!isCheckingPermission && tppAppId && hasPaymentAccess && step === 'idle'">
+
+    <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="empty-state" *ngIf="accounts.length === 0">
+      <i class="fas fa-piggy-bank"></i>
+      <p>You have no bank accounts on file to pay from.</p>
+    </div>
+
+    <ng-container *ngIf="accounts.length > 0">
+
+      <form #payForm="ngForm" (ngSubmit)="submitPayment()" novalidate>
+
+        <div class="form-group">
+          <label>From account <span class="required-asterisk">*</span></label>
+          <select class="form-control"
+                  name="fromAccount"
+                  [(ngModel)]="selectedAccountId"
+                  #fromRef="ngModel"
+                  required>
+            <option [ngValue]="null" disabled>Select one of your accounts…</option>
+            <option *ngFor="let acc of accounts" [ngValue]="acc.accountId">
+              {{ acc.accountNumberMasked }} · {{ acc.type }} · {{ acc.currency }}
+            </option>
+          </select>
+          <small class="field-error" *ngIf="fromRef.invalid && (fromRef.touched || payForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i> Please choose the source account.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>To account <span class="required-asterisk">*</span></label>
+          <input type="text" class="form-control"
+                 name="payeeAccount"
+                 [(ngModel)]="payeeAccount"
+                 placeholder="Recipient account number or IBAN (e.g. ****-5678)"
+                 #payeeRef="ngModel"
+                 required
+                 minlength="4"
+                 maxlength="34"
+                 pattern="^[A-Za-z0-9\-\* ]+$">
+          <small class="field-error" *ngIf="payeeRef.invalid && (payeeRef.touched || payForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="payeeRef.errors?.['required']">Recipient account is required.</span>
+            <span *ngIf="payeeRef.errors?.['minlength']">Recipient account must be at least 4 characters.</span>
+            <span *ngIf="payeeRef.errors?.['maxlength']">Recipient account is too long.</span>
+            <span *ngIf="payeeRef.errors?.['pattern']">Only letters, digits, hyphens, asterisks and spaces are allowed.</span>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Amount <span class="required-asterisk">*</span></label>
+          <div class="amount-input-wrap">
+            <span class="amount-currency">{{ currency }}</span>
+            <input type="number" class="form-control"
+                   name="amount"
+                   min="0.01"
+                   max="100000000"
+                   step="0.01"
+                   placeholder="0.00"
+                   [(ngModel)]="amount"
+                   #amountRef="ngModel"
+                   required>
+          </div>
+          <small class="field-error" *ngIf="amountRef.invalid && (amountRef.touched || payForm.submitted)">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="amountRef.errors?.['required']">Amount is required.</span>
+            <span *ngIf="amountRef.errors?.['min']">Amount must be greater than 0.</span>
+            <span *ngIf="amountRef.errors?.['max']">Amount is too large.</span>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Reference (optional)</label>
+          <input type="text" class="form-control"
+                 name="narrative"
+                 [(ngModel)]="narrative"
+                 maxlength="140"
+                 placeholder="e.g. May rent, dinner, etc.">
+        </div>
+
+        <div class="flex gap-16 mt-20">
+          <button type="submit" class="btn btn-primary flex-1">
+            <i class="fas fa-paper-plane"></i> Pay {{ amount ? (currency + ' ' + (amount | number:'1.2-2')) : '' }}
+          </button>
+          <button type="button" class="btn btn-secondary flex-1" (click)="cancel()">Cancel</button>
+        </div>
+      </form>
+
+    </ng-container>
+  </div>
+
+  
+  <div class="glass-card max-w-600"
+       *ngIf="step === 'initiating' || step === 'verifying' || step === 'executing'">
+    <h3 class="mb-16">Processing your payment…</h3>
+
+    <ul class="pay-progress">
+      <li [class.active]="step === 'verifying' || step === 'executing'"
+          [class.current]="step === 'initiating'">
+        <i class="fas"
+           [ngClass]="step === 'initiating' ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
+        Creating payment instruction
+      </li>
+      <li [class.active]="step === 'executing'"
+          [class.current]="step === 'verifying'">
+        <i class="fas"
+           [ngClass]="step === 'verifying' ? 'fa-spinner fa-spin' :
+                      step === 'executing' ? 'fa-check-circle' :
+                      'fa-circle'"></i>
+        Verifying with the bank
+      </li>
+      <li [class.current]="step === 'executing'">
+        <i class="fas"
+           [ngClass]="step === 'executing' ? 'fa-spinner fa-spin' : 'fa-circle'"></i>
+        Executing transfer
+      </li>
+    </ul>
+
+    <p class="text-muted text-sm mt-12">
+      <i class="fas fa-shield-alt"></i> Secure payment via {{ appName }} · payment ID
+      <strong *ngIf="paymentRecord">#{{ paymentRecord.paymentId }}</strong>
+    </p>
+  </div>
+
+ 
+  <div class="glass-card max-w-600 receipt success" *ngIf="step === 'done'">
+    <div class="receipt-header">
+      <div class="receipt-tick"><i class="fas fa-check"></i></div>
+      <h2>Payment successful</h2>
+      <p class="text-muted">{{ successMessage }}</p>
+    </div>
+
+    <div class="receipt-rows">
+      <div class="receipt-row">
+        <span class="text-muted">Payment ID</span>
+        <strong>#{{ paymentRecord?.paymentId }}</strong>
+      </div>
+      <div class="receipt-row">
+        <span class="text-muted">From</span>
+        <strong>{{ selectedAccount?.accountNumberMasked }} ({{ selectedAccount?.type }})</strong>
+      </div>
+      <div class="receipt-row">
+        <span class="text-muted">To</span>
+        <strong>{{ payeeAccount }}</strong>
+      </div>
+      <div class="receipt-row">
+        <span class="text-muted">Amount</span>
+        <strong>{{ currency }} {{ amount | number:'1.2-2' }}</strong>
+      </div>
+      <div class="receipt-row" *ngIf="narrative">
+        <span class="text-muted">Reference</span>
+        <strong>{{ narrative }}</strong>
+      </div>
+      <div class="receipt-row" *ngIf="preBalance !== null">
+        <span class="text-muted">Balance before</span>
+        <strong>{{ currency }} {{ preBalance | number:'1.2-2' }}</strong>
+      </div>
+      <div class="receipt-row" *ngIf="postBalance !== null">
+        <span class="text-muted">Balance now</span>
+        <strong class="text-success">{{ currency }} {{ postBalance | number:'1.2-2' }}</strong>
+      </div>
+      <div class="receipt-row">
+        <span class="text-muted">Status</span>
+        <span class="badge badge-active">{{ paymentRecord?.status || 'EXECUTED' }}</span>
+      </div>
+    </div>
+
+    <div class="flex gap-12 mt-20">
+      <button class="btn btn-primary flex-1" (click)="viewTransactions()">
+        <i class="fas fa-receipt"></i> View transaction history
+      </button>
+      <button class="btn btn-secondary flex-1" (click)="newPayment()">
+        <i class="fas fa-plus"></i> Make another payment
+      </button>
+    </div>
+  </div>
+
+ 
+  <div class="glass-card max-w-600 receipt error" *ngIf="step === 'failed'">
+    <div class="receipt-header">
+      <div class="receipt-tick fail"><i class="fas fa-times"></i></div>
+      <h2>Payment failed</h2>
+      <p class="text-error">{{ errorMessage }}</p>
+    </div>
+
+    <div class="receipt-rows" *ngIf="paymentRecord">
+      <div class="receipt-row">
+        <span class="text-muted">Payment ID</span>
+        <strong>#{{ paymentRecord.paymentId }}</strong>
+      </div>
+      <div class="receipt-row">
+        <span class="text-muted">Status</span>
+        <span class="badge badge-revoked">{{ paymentRecord.status }}</span>
+      </div>
+    </div>
+
+    <div class="flex gap-12 mt-20">
+      <button class="btn btn-primary flex-1" (click)="newPayment()">
+        <i class="fas fa-redo"></i> Try again
+      </button>
+      <button class="btn btn-secondary flex-1" (click)="cancel()">Close</button>
+    </div>
+  </div>
+
+</div>

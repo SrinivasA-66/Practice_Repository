@@ -1,0 +1,117 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-plus-circle"></i> Register New Application</h1>
+          <p class="page-subtitle">Create a new TPP application to start using the Open Banking APIs</p>
+        </div>
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+      
+      <div class="glass-card" *ngIf="!isLoadingTpps && myTpps.length === 0" style="max-width:640px">
+        <div class="empty-state">
+          <i class="fas fa-building"></i>
+          <p>You haven't registered a TPP company yet. Register one to start creating apps.</p>
+          <a routerLink="/developer/tpp-register" class="btn btn-primary mt-12">
+            <i class="fas fa-arrow-right"></i> Register TPP Company
+          </a>
+        </div>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoadingTpps">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="glass-card" *ngIf="!isLoadingTpps && myTpps.length > 0" style="max-width: 640px;">
+        <form #appForm="ngForm" (ngSubmit)="submitApp()" novalidate>
+
+          <div class="form-group">
+            <label>Application Name <span class="required-asterisk">*</span></label>
+            <input type="text" class="form-control"
+                   name="appName"
+                   placeholder="e.g., FinTech Budget App"
+                   [(ngModel)]="appName"
+                   #nameRef="ngModel"
+                   required
+                   minlength="3"
+                   maxlength="80">
+            <small class="field-error" *ngIf="nameRef.invalid && (nameRef.touched || appForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="nameRef.errors?.['required']">Application name is required.</span>
+              <span *ngIf="nameRef.errors?.['minlength']">Name must be at least 3 characters.</span>
+              <span *ngIf="nameRef.errors?.['maxlength']">Name must be 80 characters or less.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Parent TPP Company <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="tppId"
+                    [(ngModel)]="tppId"
+                    #tppRef="ngModel"
+                    required>
+              <option [ngValue]="null" disabled>Select a TPP company…</option>
+              <option *ngFor="let t of myTpps" [ngValue]="t.tppId">
+                {{ t.legalName }} ({{ t.status }})
+              </option>
+            </select>
+            <small class="field-error" *ngIf="tppRef.invalid && (tppRef.touched || appForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Please select a parent TPP company.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Redirect URIs (JSON array) <span class="required-asterisk">*</span></label>
+            <textarea class="form-control font-mono"
+                      name="redirectURIs"
+                      placeholder='["https://myapp.com/callback"]'
+                      [(ngModel)]="redirectURIs"
+                      #redirectRef="ngModel"
+                      required></textarea>
+            <small class="field-error" *ngIf="redirectRef.invalid && (redirectRef.touched || appForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Redirect URIs are required.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Public Keys (JWK Set — JSON) <span class="required-asterisk">*</span></label>
+            <textarea class="form-control font-mono"
+                      name="publicKeys"
+                      placeholder='{"keys":[{"kty":"RSA","kid":"key-1"}]}'
+                      [(ngModel)]="publicKeys"
+                      #keysRef="ngModel"
+                      required></textarea>
+            <small class="field-error" *ngIf="keysRef.invalid && (keysRef.touched || appForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Public keys are required.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Requested Scopes <span class="required-asterisk">*</span></label>
+            <div class="scope-checkboxes">
+              <label *ngFor="let scope of availableScopes" class="scope-check-item">
+                <input type="checkbox"
+                       [checked]="selectedScopes.includes(scope)"
+                       (change)="toggleScope(scope)">
+                <span class="scope-pill">{{ scope }}</span>
+              </label>
+            </div>
+            <small class="field-error" *ngIf="selectedScopes.length === 0 && appForm.submitted">
+              <i class="fas fa-exclamation-circle"></i> Select at least one scope.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting"><i class="fas fa-paper-plane"></i> Register Application</span>
+            <span *ngIf="isSubmitting"><i class="fas fa-spinner fa-spin"></i> Submitting...</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  

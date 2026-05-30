@@ -1,0 +1,85 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-shield-alt"></i> SCA Verification</h1>
+          <p class="page-subtitle">Strong Customer Authentication — verify your identity to activate the consent</p>
+        </div>
+      </div>
+
+      <div class="glass-card" style="max-width:480px">
+
+        <div class="alert alert-info mb-16" *ngIf="consentId">
+          <i class="fas fa-info-circle"></i>
+          Verifying consent <strong>#{{ consentId }}</strong>. Complete SCA to activate it.
+        </div>
+
+        <div class="form-group">
+          <label>Verification Method</label>
+          <div class="pill-tabs">
+            <button *ngFor="let m of methods"
+                    class="pill-tab"
+                    [ngClass]="{ 'active': method === m.id }"
+                    (click)="selectMethod(m.id)">
+              {{ m.label }}
+            </button>
+          </div>
+          <small class="text-muted">{{ currentMethod.description }}</small>
+        </div>
+
+        <div class="alert alert-info mb-16">
+          <i class="fas fa-terminal"></i>
+          A one-time code has been generated. <strong>Open your browser console</strong>
+          (F12 → Console) to see it.
+        </div>
+
+        <form #scaForm="ngForm" (ngSubmit)="verify()" novalidate>
+
+          <div class="form-group">
+            <label>Enter the {{ currentMethod.label }} code <span class="required-asterisk">*</span></label>
+            <input type="text"
+                   name="enteredCode"
+                   class="form-control otp-input"
+                   [(ngModel)]="enteredCode"
+                   [placeholder]="placeholder()"
+                   [maxlength]="currentMethod.length"
+                   [minlength]="currentMethod.length"
+                   autocomplete="off"
+                   required
+                   #codeRef="ngModel">
+            <small class="field-error" *ngIf="codeRef.invalid && (codeRef.touched || scaForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="codeRef.errors?.['required']">Verification code is required.</span>
+              <span *ngIf="codeRef.errors?.['minlength']">Code must be {{ currentMethod.length }} characters.</span>
+            </small>
+          </div>
+
+          <button type="button" class="btn btn-light mb-12" (click)="regenerateCode()">
+            <i class="fas fa-redo"></i> Generate a new code
+          </button>
+
+          <button type="submit" class="btn btn-primary" style="width:100%"
+                  [disabled]="isVerifying || activated">
+            <span *ngIf="!isVerifying && !activated">
+              <i class="fas fa-check-circle"></i> Verify &amp; activate consent
+            </span>
+            <span *ngIf="isVerifying">
+              <i class="fas fa-spinner fa-spin"></i> Verifying...
+            </span>
+            <span *ngIf="activated">
+              <i class="fas fa-check-circle"></i> Activated
+            </span>
+          </button>
+        </form>
+
+        <div class="alert alert-success mt-16" *ngIf="activated">
+          <i class="fas fa-check-circle"></i>
+          Consent <strong>#{{ consentId }}</strong> is now <strong>ACTIVE</strong>.
+          Redirecting to My Consents...
+        </div>
+
+        <div class="alert alert-error mt-16" *ngIf="errorMessage">
+          <i class="fas fa-times-circle"></i> {{ errorMessage }}
+        </div>
+      </div>
+    </div>
+  

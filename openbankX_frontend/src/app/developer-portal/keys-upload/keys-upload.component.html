@@ -1,0 +1,66 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-key"></i> Keys &amp; JWK Set</h1>
+          <p class="page-subtitle" *ngIf="app">Managing keys for: <strong>{{ app.appName }}</strong></p>
+        </div>
+        <a routerLink="/developer/apps" class="btn btn-light">
+          <i class="fas fa-arrow-left"></i> Back to Apps
+        </a>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Loading app details...</span>
+      </div>
+
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+      <div class="alert alert-success" *ngIf="saved">
+        <i class="fas fa-check-circle"></i> Keys updated successfully.
+      </div>
+
+      <div class="glass-card" *ngIf="!isLoading && app" style="max-width:680px">
+        <form #keysForm="ngForm" (ngSubmit)="saveKeys()" novalidate>
+          <div class="form-group">
+            <label>JWK Set (JSON) <span class="required-asterisk">*</span></label>
+            <textarea class="form-control font-mono"
+                      name="jwkSet"
+                      [(ngModel)]="jwkSet"
+                      #jwkRef="ngModel"
+                      rows="8"
+                      placeholder='{"keys":[{"kty":"RSA","kid":"key-1"}]}'
+                      required></textarea>
+            <small class="field-error" *ngIf="jwkRef.invalid && (jwkRef.touched || keysForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> JWK Set is required.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Redirect URIs (JSON array) <span class="required-asterisk">*</span></label>
+            <textarea class="form-control font-mono"
+                      name="redirectURIs"
+                      [(ngModel)]="redirectURIs"
+                      #redirRef="ngModel"
+                      rows="3"
+                      placeholder='["https://myapp.com/callback"]'
+                      required></textarea>
+            <small class="field-error" *ngIf="redirRef.invalid && (redirRef.touched || keysForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Redirect URIs are required.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+            <span *ngIf="!isSaving"><i class="fas fa-save"></i> Update Keys</span>
+            <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && !app && !errorMessage">
+        <i class="fas fa-key"></i>
+        <p>No app found.</p>
+      </div>
+    </div>
+  

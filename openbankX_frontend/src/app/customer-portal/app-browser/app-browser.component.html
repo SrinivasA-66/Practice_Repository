@@ -1,0 +1,122 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-store"></i> My Apps</h1>
+          <p class="page-subtitle">
+            Apps approved by the bank that are live for use — grant access and start using them
+          </p>
+        </div>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Loading apps...</span>
+      </div>
+
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && availableApps.length === 0 && !errorMessage">
+        <i class="fas fa-store"></i>
+        <p>No live apps are available right now. Approved apps will appear here once their developer has subscribed to a plan.</p>
+      </div>
+
+      <div class="grid-2" *ngIf="!isLoading">
+
+        <div *ngFor="let app of availableApps" class="glass-card app-card">
+
+          <div class="flex justify-between items-start mb-8">
+            <div>
+              <h3 class="app-title">{{ app.appName }}</h3>
+              <p class="text-sm text-muted">
+                Provided by {{ app.tpp?.legalName || 'a trusted TPP' }}
+              </p>
+            </div>
+            <span class="badge"
+                  [ngClass]="hasActiveConsent(app.tppAppId) ? 'badge-active' : 'badge-info'">
+              {{ hasActiveConsent(app.tppAppId) ? 'CONNECTED' : 'AVAILABLE' }}
+            </span>
+          </div>
+
+       
+          <ng-container *ngIf="hasActiveConsent(app.tppAppId)">
+            <div class="connected-summary">
+              <div class="summary-row">
+                <span class="text-sm text-muted">Permissions granted</span>
+                <strong>{{ grantedScopes(app.tppAppId).length }}</strong>
+              </div>
+              <div class="summary-row">
+                <span class="text-sm text-muted">Consent ID</span>
+                <strong>#{{ activeConsentId(app.tppAppId) }}</strong>
+              </div>
+              <div class="summary-row" *ngIf="consentExpiry(app.tppAppId) as exp">
+                <span class="text-sm text-muted">Access valid until</span>
+                <strong>{{ exp | date:'mediumDate' }}</strong>
+              </div>
+            </div>
+
+            <div class="mt-12">
+              <span *ngFor="let scope of grantedScopes(app.tppAppId)" class="scope-pill">
+                {{ getScopeLabel(scope) }}
+              </span>
+            </div>
+
+            <div class="action-row mt-16">
+              <button *ngIf="hasScopeFor(app.tppAppId, 'accounts')"
+                      class="btn btn-primary btn-sm"
+                      (click)="openAccounts(app)">
+                <i class="fas fa-wallet"></i> Accounts
+              </button>
+              <button *ngIf="hasScopeFor(app.tppAppId, 'payments')"
+                      class="btn btn-primary btn-sm"
+                      (click)="openPayments(app)">
+                <i class="fas fa-paper-plane"></i> Payments
+              </button>
+              <button *ngIf="hasScopeFor(app.tppAppId, 'funds-confirmations') || hasScopeFor(app.tppAppId, 'balances')"
+                      class="btn btn-primary btn-sm"
+                      (click)="openFunds(app)">
+                <i class="fas fa-coins"></i> Funds Check
+              </button>
+              <button class="btn btn-light btn-sm" (click)="manageConsent()">
+                <i class="fas fa-sliders-h"></i> Manage
+              </button>
+            </div>
+          </ng-container>
+
+         
+          <ng-container *ngIf="!hasActiveConsent(app.tppAppId)">
+            <label class="text-sm text-muted"
+                   style="text-transform:uppercase; letter-spacing:0.05em;">
+              Choose what {{ app.appName }} can access
+            </label>
+
+            <div class="scope-checkboxes mt-8">
+              <label *ngFor="let scope of parseScopes(app.scopesRequested)"
+                     class="scope-check-item">
+                <input type="checkbox"
+                       [checked]="isScopeSelected(app.tppAppId, scope)"
+                       (change)="toggleScope(app.tppAppId, scope)">
+                <span class="scope-pill">{{ getScopeLabel(scope) }}</span>
+              </label>
+            </div>
+
+            <div class="alert alert-error mt-12" *ngIf="appErrors[app.tppAppId]">
+              <i class="fas fa-exclamation-circle"></i> {{ appErrors[app.tppAppId] }}
+            </div>
+
+            <button class="btn btn-primary mt-12"
+                    (click)="grantAccess(app)"
+                    [disabled]="pendingAppId === app.tppAppId">
+              <span *ngIf="pendingAppId !== app.tppAppId">
+                <i class="fas fa-handshake"></i> Grant access &amp; verify
+              </span>
+              <span *ngIf="pendingAppId === app.tppAppId">
+                <i class="fas fa-spinner fa-spin"></i> Creating consent...
+              </span>
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  

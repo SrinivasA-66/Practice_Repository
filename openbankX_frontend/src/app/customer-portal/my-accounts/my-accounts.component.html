@@ -1,0 +1,166 @@
+    <div class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-wallet"></i> My Accounts</h1>
+          <p class="page-subtitle" *ngIf="tppAppName">
+            Shared with <strong>{{ tppAppName }}</strong>
+          </p>
+          <p class="page-subtitle" *ngIf="!tppAppName">
+            Open this page through an app that has the <em>View accounts</em> permission
+          </p>
+        </div>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Loading...</span>
+      </div>
+
+
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+
+      <div *ngIf="!isLoading && !tppAppId && appsWithAccountAccess.length > 0"
+           class="glass-card">
+        <h3 class="mb-12"><i class="fas fa-hand-pointer"></i> Open through an app</h3>
+        <p class="text-muted mb-16">
+          You've granted account access to {{ appsWithAccountAccess.length }}
+          app{{ appsWithAccountAccess.length === 1 ? '' : 's' }}.
+          Pick one to view your accounts as that app would.
+        </p>
+        <div class="app-picker">
+          <button *ngFor="let c of appsWithAccountAccess"
+                  class="app-picker-item"
+                  (click)="openThroughApp(c)">
+            <div class="app-picker-icon"><i class="fas fa-cube"></i></div>
+            <div class="app-picker-meta">
+              <strong>{{ c.tppApp?.appName }}</strong>
+              <span class="text-sm text-muted">{{ c.tppApp?.tpp?.legalName || '' }}</span>
+            </div>
+            <i class="fas fa-chevron-right text-muted"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && !tppAppId && appsWithAccountAccess.length === 0 && noConsentsAtAll"
+           class="glass-card no-consent-card">
+        <i class="fas fa-lock no-consent-icon"></i>
+        <h3>No active consents yet</h3>
+        <p class="text-muted">
+          You haven't granted any app access to your accounts. Go to <strong>My Apps</strong> to get started.
+        </p>
+        <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+          <i class="fas fa-store"></i> Open My Apps
+        </button>
+      </div>
+
+    
+      <div *ngIf="!isLoading && !tppAppId && appsWithAccountAccess.length === 0 && !noConsentsAtAll"
+           class="glass-card no-consent-card">
+        <i class="fas fa-lock no-consent-icon"></i>
+        <h3>No app has account access yet</h3>
+        <p class="text-muted">
+          None of your active consents include the <em>View accounts</em> permission.
+          Grant that permission to an app from <strong>My Apps</strong> first.
+        </p>
+        <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+          <i class="fas fa-store"></i> Open My Apps
+        </button>
+      </div>
+
+   
+      <div *ngIf="!isLoading && tppAppId && !hasAccountAccess"
+           class="glass-card no-consent-card">
+        <i class="fas fa-lock no-consent-icon"></i>
+        <h3>This app doesn't have account access</h3>
+        <p class="text-muted">
+          Your consent for <strong>{{ tppAppName || 'this app' }}</strong> doesn't include the
+          <em>View accounts</em> permission.
+        </p>
+        <button class="btn btn-primary mt-12" (click)="goToBrowseApps()">
+          <i class="fas fa-store"></i> Open another app
+        </button>
+      </div>
+
+
+      <div *ngIf="!isLoading && tppAppId && hasAccountAccess">
+        <div class="grid-2 mb-20">
+          <div *ngFor="let acc of accounts"
+               class="glass-card account-card"
+               [class.selected-account]="selectedAccount?.accountId === acc.accountId"
+               (click)="loadTransactions(acc)">
+            <div class="flex items-center justify-between">
+              <h4 class="font-mono">{{ acc.accountNumberMasked }}</h4>
+              <span class="badge"
+                    [ngClass]="acc.status === 'ACTIVE' ? 'badge-active' : 'badge-locked'">
+                {{ acc.status }}
+              </span>
+            </div>
+            <div class="mt-4 text-sm text-muted">
+              {{ acc.type }} • {{ acc.currency }}
+            </div>
+            <div class="mt-8 font-mono">
+              <strong>Balance:</strong>
+              {{ acc.currency }} {{ acc.balance | number:'1.2-2' }}
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="glass-card" *ngIf="selectedAccount">
+          <div class="flex items-center justify-between mb-12">
+            <h3>
+              <i class="fas fa-receipt"></i>
+              Transaction history — {{ selectedAccount.accountNumberMasked }}
+            </h3>
+            <button class="btn btn-light btn-sm" (click)="refreshTransactions()"
+                    [disabled]="txnLoading">
+              <i class="fas fa-sync" [class.fa-spin]="txnLoading"></i> Refresh
+            </button>
+          </div>
+
+          <div *ngIf="txnLoading" class="loading-container">
+            <div class="spinner"></div>
+          </div>
+
+          <table class="data-table" *ngIf="!txnLoading && transactions.length > 0">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let txn of transactions">
+                <td class="text-sm">{{ txn.txnDate | date:'medium' }}</td>
+                <td>{{ txn.narrative || '—' }}</td>
+                <td>
+                  <span class="badge"
+                        [ngClass]="txn.txnType === 'CREDIT' ? 'badge-active' : 'badge-revoked'">
+                    {{ txn.txnType }}
+                  </span>
+                </td>
+                <td class="text-right font-mono"
+                    [class.text-success]="txn.txnType === 'CREDIT'"
+                    [class.text-error]="txn.txnType === 'DEBIT'">
+                  {{ txn.txnType === 'DEBIT' ? '-' : '+' }}
+                  {{ selectedAccount.currency }} {{ txn.amount | number:'1.2-2' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="empty-state" *ngIf="!txnLoading && transactions.length === 0">
+            <i class="fas fa-receipt"></i>
+            <p>No transactions on this account yet.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  

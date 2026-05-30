@@ -1,0 +1,73 @@
+    <header class="navbar">
+      <div class="navbar-left">
+        <h2 class="page-title">{{ pageTitle }}</h2>
+      </div>
+
+      <div class="navbar-right">
+      
+        <div class="notification-wrapper">
+          <button class="notif-btn" (click)="toggleNotifications()" aria-label="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-count" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+          </button>
+
+          <div class="notif-dropdown" *ngIf="showNotifications">
+            <div class="notif-header">
+              <span>Notifications</span>
+              <div class="flex items-center gap-8">
+                <button class="link-btn"
+                        (click)="markAllAsRead()" *ngIf="unreadCount > 0">
+                  Mark all read
+                </button>
+                <span class="text-muted text-sm">{{ notifications.length }} total</span>
+              </div>
+            </div>
+            <div class="notif-list">
+              <div *ngIf="notifications.length === 0" class="notif-empty">
+                <i class="fas fa-check-circle"></i>
+                <p>No notifications</p>
+              </div>
+              <div *ngFor="let notif of notifications"
+                   class="notif-item"
+                   [ngClass]="{ 'unread': notif.status === 'UNREAD' }"
+                   (click)="markRead(notif)">
+                <div class="notif-icon"
+                     [ngStyle]="{ 'color': getCategoryColor(notif.category), 'background': getCategoryBg(notif.category) }">
+                  <i [class]="getCategoryIcon(notif.category)"></i>
+                </div>
+                <div class="notif-content">
+                  <p class="notif-msg">{{ notif.message }}</p>
+                  <span class="notif-time text-sm text-muted">{{ notif.createdDate | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+     
+        <div class="profile-wrapper">
+          <button class="user-avatar-sm" (click)="toggleProfile()" aria-label="Profile menu">
+            <span class="avatar-initials">{{ initials }}</span>
+          </button>
+
+          <div class="profile-dropdown" *ngIf="showProfile">
+            <div class="profile-header">
+              <div class="profile-avatar-lg">{{ initials }}</div>
+              <div class="profile-meta">
+                <div class="profile-name">{{ session?.name || 'User' }}</div>
+                <div class="profile-email">{{ session?.email || '' }}</div>
+                <span class="badge badge-info mt-4">{{ session?.role }}</span>
+              </div>
+            </div>
+            <div class="profile-divider"></div>
+            <button class="profile-item" (click)="goToNotifications()">
+              <i class="fas fa-bell"></i> Notifications
+            </button>
+            <button class="profile-item danger" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i> Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  

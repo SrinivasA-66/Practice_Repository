@@ -1,0 +1,13 @@
+.error-wrapper {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #e8ecff 0%, #f0f4ff 100%);
+}
+.error-card {
+  text-align: center; padding: 60px 40px; max-width: 480px;
+  background: rgba(255,255,255,0.85); border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(10px);
+}
+.error-code { font-size: 6rem; font-weight: 800; line-height: 1; margin-bottom: 8px; }
+.error-card h2 { margin: 0 0 12px; font-size: 1.5rem; }
+.error-desc { color: #6b7280; margin: 0 0 30px; line-height: 1.6; }
+.error-icon { font-size: 3rem; margin-bottom: 30px; }

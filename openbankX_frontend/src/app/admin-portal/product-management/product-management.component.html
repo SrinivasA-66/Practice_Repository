@@ -1,0 +1,179 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-boxes"></i> API Products</h1>
+          <p class="page-subtitle">Manage product catalog and pricing plans</p>
+        </div>
+        <button class="btn btn-primary" (click)="openCreate()" *ngIf="!showForm">
+          <i class="fas fa-plus"></i> New Product
+        </button>
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+      <div class="glass-card mb-20" *ngIf="showForm" style="max-width:560px">
+        <h3 class="mb-16">{{ editMode ? 'Edit API Product' : 'Create API Product' }}</h3>
+
+        <form #productForm="ngForm" (ngSubmit)="save()" novalidate>
+
+          <div class="form-group">
+            <label>Product Name <span class="required-asterisk">*</span></label>
+            <input type="text" class="form-control"
+                   name="name"
+                   [(ngModel)]="form.name"
+                   [readonly]="editMode"
+                   placeholder="e.g., Open Banking Core"
+                   #nameRef="ngModel"
+                   required
+                   minlength="3"
+                   maxlength="80" />
+            <small class="field-error" *ngIf="nameRef.invalid && (nameRef.touched || productForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="nameRef.errors?.['required']">Product name is required.</span>
+              <span *ngIf="nameRef.errors?.['minlength']">Name must be at least 3 characters.</span>
+              <span *ngIf="nameRef.errors?.['maxlength']">Name must be 80 characters or less.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Description <span class="required-asterisk">*</span></label>
+            <textarea class="form-control"
+                      name="description"
+                      [(ngModel)]="form.description"
+                      rows="2"
+                      placeholder="Describe what this product offers"
+                      #descRef="ngModel"
+                      required
+                      minlength="10"
+                      maxlength="500"></textarea>
+            <small class="field-error" *ngIf="descRef.invalid && (descRef.touched || productForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="descRef.errors?.['required']">Description is required.</span>
+              <span *ngIf="descRef.errors?.['minlength']">Description must be at least 10 characters.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Endpoints (JSON array) <span class="required-asterisk">*</span></label>
+            <textarea class="form-control font-mono"
+                      name="endpointsJSON"
+                      [(ngModel)]="form.endpointsJSON"
+                      rows="2"
+                      placeholder='["/accounts","/payments"]'
+                      #epRef="ngModel"
+                      required></textarea>
+            <small class="field-error" *ngIf="epRef.invalid && (epRef.touched || productForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Endpoints are required.
+            </small>
+          </div>
+
+          <div class="flex gap-8">
+            <button type="submit" class="btn btn-success" [disabled]="isSaving">
+              <span *ngIf="!isSaving"><i class="fas fa-check"></i> {{ editMode ? 'Update' : 'Create' }}</span>
+              <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+            </button>
+            <button type="button" class="btn btn-light" (click)="cancel()" [disabled]="isSaving">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="grid-2" *ngIf="!isLoading && products.length > 0">
+        <div *ngFor="let p of products" class="glass-card">
+          <div class="flex items-center justify-between">
+            <h4>{{ p.name }}</h4>
+            <span class="badge"
+                  [ngClass]="p.status === 'ACTIVE' ? 'badge-active' : 'badge-deprecated'">
+              {{ p.status }}
+            </span>
+          </div>
+
+          <p class="text-sm text-muted mt-8">{{ p.description || 'No description' }}</p>
+
+          <div class="mt-12">
+            <span *ngFor="let ep of parseJson(p.endpointsJSON)" class="scope-pill">
+              {{ ep }}
+            </span>
+            <span class="text-sm text-muted"
+                  *ngIf="parseJson(p.endpointsJSON).length === 0">
+              No endpoints
+            </span>
+          </div>
+
+          <div class="mt-12" *ngIf="getPlansForProduct(p.productId).length > 0">
+            <h5 class="text-sm" style="margin-bottom:6px; opacity:0.7">Associated Plans:</h5>
+            <div *ngFor="let plan of getPlansForProduct(p.productId)"
+                 style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.85rem;">
+              <span class="badge"
+                    [ngClass]="plan.environment === 'SANDBOX' ? 'badge-sandbox' : 'badge-info'">
+                {{ plan.environment }}
+              </span>
+              <span>{{ plan.rateLimitPerMin }}/min</span>
+              <span class="text-muted">·</span>
+              <span>{{ plan.dailyQuota }}/day</span>
+              <span class="text-muted">·</span>
+              <span>{{ plan.durationValue }} {{ plan.durationUnit }}</span>
+            </div>
+          </div>
+          <div class="mt-8 text-sm text-muted" *ngIf="getPlansForProduct(p.productId).length === 0">
+            No plans configured
+          </div>
+
+         
+          <div class="mt-12" *ngIf="getSubscribersForProduct(p.productId).length > 0">
+            <h5 class="text-sm" style="margin-bottom:6px; opacity:0.7">
+              Subscribers
+              <span class="badge badge-info" style="margin-left:6px">
+                {{ getSubscribersForProduct(p.productId).length }}
+              </span>
+            </h5>
+            <div *ngFor="let sub of getSubscribersForProduct(p.productId)"
+                 style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.85rem;">
+              <i class="fas fa-cube text-muted"></i>
+              <strong>{{ sub.tppApp?.appName || '—' }}</strong>
+              <span class="text-muted">·</span>
+              <span class="badge"
+                    [ngClass]="sub.apiPlan?.environment === 'SANDBOX' ? 'badge-sandbox' : 'badge-info'">
+                {{ sub.apiPlan?.environment }}
+              </span>
+              <span class="badge"
+                    [ngClass]="{
+                      'badge-active': sub.status === 'ACTIVE',
+                      'badge-revoked': sub.status === 'SUSPENDED',
+                      'badge-expired': sub.status === 'CANCELLED'
+                    }">{{ sub.status }}</span>
+            </div>
+          </div>
+          <div class="mt-8 text-sm text-muted"
+               *ngIf="getPlansForProduct(p.productId).length > 0 && getSubscribersForProduct(p.productId).length === 0">
+            No subscribers yet
+          </div>
+
+          <div class="mt-16 flex gap-8">
+            <button class="btn btn-sm btn-secondary" (click)="edit(p)">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="remove(p)">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="btn btn-sm btn-light" (click)="reloadSubscribers()" title="Refresh subscriber list">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoading && products.length === 0 && !errorMessage">
+        <i class="fas fa-boxes"></i>
+        <p>No products yet. Click "New Product" to create one.</p>
+      </div>
+    </div>
+  

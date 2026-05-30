@@ -1,0 +1,89 @@
+    <aside class="sidebar" [ngClass]="{ 'collapsed': isCollapsed }">
+
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <i class="fas fa-university"></i>
+        </div>
+        <span class="logo-text" *ngIf="!isCollapsed">OpenBank<span class="accent">X</span></span>
+        <button class="collapse-btn" (click)="toggleCollapse()">
+          <i [ngClass]="isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
+        </button>
+      </div>
+
+  
+      <div class="sidebar-user" *ngIf="!isCollapsed">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ session?.name }}</div>
+          <div class="user-role">
+            <span class="badge badge-info">{{ session?.role }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      
+      <nav class="sidebar-nav" [ngSwitch]="session?.role">
+
+        
+        <ng-container *ngSwitchCase="'TPP'">
+          <a *ngFor="let item of tppMenu"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="item.label">
+            <i [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+
+    
+        <ng-container *ngSwitchCase="'CUSTOMER'">
+          <a *ngFor="let item of customerMenu"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="item.label">
+            <i [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+
+       
+        <ng-container *ngSwitchCase="'OPERATIONS'">
+          <a *ngFor="let item of opsMenu"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="item.label">
+            <i [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+
+       
+        <ng-container *ngSwitchCase="'ADMIN'">
+          <a *ngFor="let item of adminMenu"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="item.label">
+            <i [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+
+      </nav>
+
+    
+      <div class="sidebar-footer">
+        <a class="nav-item logout" (click)="logout()" [title]="'Logout'">
+          <i class="fas fa-sign-out-alt"></i>
+          <span *ngIf="!isCollapsed">Logout</span>
+        </a>
+      </div>
+    </aside>
+  

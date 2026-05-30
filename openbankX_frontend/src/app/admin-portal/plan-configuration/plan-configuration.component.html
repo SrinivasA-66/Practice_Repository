@@ -1,0 +1,197 @@
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <h1><i class="fas fa-sliders-h"></i> Plan Configuration</h1>
+          <p class="page-subtitle">
+            Configure rate limits, quotas, SLA & subscription duration per API Product
+          </p>
+        </div>
+        <button class="btn btn-primary" (click)="startCreate()" *ngIf="!showForm">
+          <i class="fas fa-plus"></i> New Plan
+        </button>
+      </div>
+
+      <div class="alert alert-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+
+  
+      <div class="glass-card mb-20" *ngIf="showForm" style="max-width:560px">
+        <h3 class="mb-16">{{ editingPlan ? 'Edit Plan' : 'Create Plan' }}</h3>
+
+        <form #planForm="ngForm" (ngSubmit)="save()" novalidate>
+
+          <div class="form-group">
+            <label>API Product <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="productId"
+                    [(ngModel)]="form.productId"
+                    #productRef="ngModel"
+                    required>
+              <option [ngValue]="null" disabled>Choose an API product</option>
+              <option *ngFor="let p of products" [ngValue]="p.productId">
+                {{ p.name }} <span *ngIf="p.status !== 'ACTIVE'">({{ p.status }})</span>
+              </option>
+            </select>
+            <small class="field-error" *ngIf="productRef.invalid && (productRef.touched || planForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i> Please select an API product.
+            </small>
+            <small class="text-muted" *ngIf="products.length === 0">
+              No API products available. Approve a TPP app first to auto-create one.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Environment <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="environment"
+                    [(ngModel)]="form.environment"
+                    required>
+              <option value="SANDBOX">Sandbox</option>
+              <option value="PRODUCTION">Production</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Rate Limit / min <span class="required-asterisk">*</span></label>
+            <input type="number" class="form-control"
+                   name="rateLimitPerMin"
+                   [(ngModel)]="form.rateLimitPerMin"
+                   #rateRef="ngModel"
+                   required
+                   min="1"
+                   max="100000">
+            <small class="field-error" *ngIf="rateRef.invalid && (rateRef.touched || planForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="rateRef.errors?.['required']">Rate limit is required.</span>
+              <span *ngIf="rateRef.errors?.['min']">Rate limit must be at least 1.</span>
+              <span *ngIf="rateRef.errors?.['max']">Rate limit is too large.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Daily Quota <span class="required-asterisk">*</span></label>
+            <input type="number" class="form-control"
+                   name="dailyQuota"
+                   [(ngModel)]="form.dailyQuota"
+                   #quotaRef="ngModel"
+                   required
+                   min="1"
+                   max="100000000">
+            <small class="field-error" *ngIf="quotaRef.invalid && (quotaRef.touched || planForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="quotaRef.errors?.['required']">Daily quota is required.</span>
+              <span *ngIf="quotaRef.errors?.['min']">Daily quota must be at least 1.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>SLA (%) <span class="required-asterisk">*</span></label>
+            <input type="number" class="form-control"
+                   name="sla"
+                   [(ngModel)]="form.sla"
+                   #slaRef="ngModel"
+                   required
+                   min="0"
+                   max="100">
+            <small class="field-error" *ngIf="slaRef.invalid && (slaRef.touched || planForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="slaRef.errors?.['required']">SLA is required.</span>
+              <span *ngIf="slaRef.errors?.['min'] || slaRef.errors?.['max']">SLA must be between 0 and 100.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Duration Value <span class="required-asterisk">*</span></label>
+            <input type="number" class="form-control"
+                   name="durationValue"
+                   [(ngModel)]="form.durationValue"
+                   #durRef="ngModel"
+                   required
+                   min="1"
+                   max="365">
+            <small class="field-error" *ngIf="durRef.invalid && (durRef.touched || planForm.submitted)">
+              <i class="fas fa-exclamation-circle"></i>
+              <span *ngIf="durRef.errors?.['required']">Duration value is required.</span>
+              <span *ngIf="durRef.errors?.['min']">Duration must be at least 1.</span>
+              <span *ngIf="durRef.errors?.['max']">Duration is too large.</span>
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Duration Unit <span class="required-asterisk">*</span></label>
+            <select class="form-control"
+                    name="durationUnit"
+                    [(ngModel)]="form.durationUnit"
+                    required>
+              <option value="DAYS">Days</option>
+              <option value="MONTHS">Months</option>
+              <option value="YEARS">Years</option>
+            </select>
+          </div>
+
+          <div class="flex gap-8">
+            <button type="submit" class="btn btn-success" [disabled]="isSaving">
+              <span *ngIf="!isSaving"><i class="fas fa-check"></i> {{ editingPlan ? 'Update' : 'Create' }}</span>
+              <span *ngIf="isSaving"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+            </button>
+            <button type="button" class="btn btn-light" (click)="cancel()" [disabled]="isSaving">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="glass-card" *ngIf="!isLoading">
+        <table class="data-table" *ngIf="plans.length > 0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>API Product</th>
+              <th>Environment</th>
+              <th>Rate/min</th>
+              <th>Daily Quota</th>
+              <th>SLA</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of plans">
+              <td>#{{ p.planId }}</td>
+              <td><strong>{{ resolveProductName(p) }}</strong></td>
+              <td>
+                <span class="badge" [ngClass]="p.environment === 'SANDBOX' ? 'badge-sandbox' : 'badge-info'">
+                  {{ p.environment }}
+                </span>
+              </td>
+              <td>{{ p.rateLimitPerMin }}</td>
+              <td>{{ p.dailyQuota }}</td>
+              <td>{{ p.sla }}%</td>
+              <td>{{ p.durationValue }} {{ p.durationUnit }}</td>
+              <td>
+                <div class="flex gap-8">
+                  <button class="btn btn-sm btn-secondary" (click)="edit(p)">
+                    <i class="fas fa-pen"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="deletePlan(p)">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-state" *ngIf="plans.length === 0">
+          <i class="fas fa-sliders-h"></i>
+          <p>No plans configured yet. Click "New Plan" to create one.</p>
+        </div>
+      </div>
+    </div>
+  

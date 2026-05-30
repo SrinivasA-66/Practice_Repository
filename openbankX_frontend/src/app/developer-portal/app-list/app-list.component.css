@@ -1,0 +1,9 @@
+.app-card { animation: fadeInUp 0.4s ease both; }
+.app-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.app-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.1rem;
+}
+.app-scopes { display: flex; flex-wrap: wrap; gap: 4px; }
+.app-actions { display: flex; gap: 8px; }

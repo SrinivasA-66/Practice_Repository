@@ -1,0 +1,30 @@
+    .app-card { padding: 24px; min-height: 240px; }
+    .app-title { font-size: 1.1rem; font-weight: 600; }
+    .scope-checkboxes {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .scope-check-item {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; user-select: none;
+    }
+    .connected-summary {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  
